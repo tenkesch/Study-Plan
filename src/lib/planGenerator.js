@@ -1,22 +1,29 @@
-const PHASES = [
+import { localCalendarDayNumber } from "./dateUtils.js";
+
+export const PHASES = [
   "Getting familiar with the material",
   "In-depth study",
   "Practice and exercises",
   "Revision",
 ];
 
-function utcDate(value) {
-  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    return new Date(`${value}T00:00:00.000Z`);
+export function createActivityId() {
+  try {
+    if (typeof globalThis.crypto?.randomUUID === "function") {
+      return globalThis.crypto.randomUUID();
+    }
+  } catch {
+    // Fall back when access to browser crypto is unavailable.
   }
-  const date = new Date(value);
-  return new Date(
-    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()),
-  );
+  return `activity-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
-function daysBetween(start, end) {
-  return Math.round((end - start) / 86400000);
+function dateOnly(value) {
+  if (typeof value === "string") return value;
+  const year = String(value.getFullYear()).padStart(4, "0");
+  const month = String(value.getMonth() + 1).padStart(2, "0");
+  const day = String(value.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 function splitIntoSessions(hours) {
@@ -30,10 +37,7 @@ function splitIntoSessions(hours) {
 function phaseForWeek(week, weeks) {
   if (week === weeks) return PHASES[3];
   if (weeks <= 1) return PHASES[3];
-  const phaseIndex = Math.min(
-    2,
-    Math.floor(((week - 1) / (weeks - 1)) * 3),
-  );
+  const phaseIndex = Math.min(2, Math.floor(((week - 1) / (weeks - 1)) * 3));
   return PHASES[phaseIndex];
 }
 
@@ -41,16 +45,17 @@ export function generatePlan(
   { subject, examDate, hoursPerWeek },
   today = new Date(),
 ) {
-  const start = utcDate(today);
-  const exam = utcDate(examDate);
-  const daysUntilExam = daysBetween(start, exam);
+  const todayString = dateOnly(today);
+  const daysUntilExam =
+    localCalendarDayNumber(examDate) - localCalendarDayNumber(todayString);
   const weeks = Math.max(1, Math.ceil(daysUntilExam / 7));
   const shortPlan = daysUntilExam < 7;
   const activitiesByWeek = [];
 
   for (let week = 1; week <= weeks; week += 1) {
-    const weekDays =
-      shortPlan ? daysUntilExam : Math.min(7, daysUntilExam - (week - 1) * 7);
+    const weekDays = shortPlan
+      ? daysUntilExam
+      : Math.min(7, daysUntilExam - (week - 1) * 7);
     const weeklyHours = shortPlan
       ? Math.max(1, (hoursPerWeek * weekDays) / 7)
       : hoursPerWeek;
@@ -66,8 +71,8 @@ export function generatePlan(
               : "Revision session";
         }
         return {
-          id: `week-${week}-activity-${index + 1}`,
-          name: `${subject}: ${name}`,
+          id: createActivityId(),
+          name: `${subject.trim()}: ${name}`,
           duration,
           week,
           phase,
@@ -91,7 +96,7 @@ export function generatePlan(
   }
 
   return {
-    subject,
+    subject: subject.trim(),
     examDate,
     hoursPerWeek,
     weeks,
@@ -100,5 +105,3 @@ export function generatePlan(
     skippedWeeks,
   };
 }
-
-export { PHASES };

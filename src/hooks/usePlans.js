@@ -7,6 +7,7 @@ import {
   loadPlanState,
   MAX_PLANS,
   parsePlanState,
+  renameActivityInState,
   selectPlanInState,
   toggleActivityInState,
 } from "../plans/planState.js";
@@ -26,12 +27,12 @@ function readPlanStorage() {
   }
 }
 
-function createPlanRecord(serverPlan) {
+function createPlanRecord(plan) {
   return {
-    ...serverPlan,
+    ...plan,
     id: createPlanId(),
     createdAt: new Date().toISOString(),
-    activities: serverPlan.activities.map((activity) => ({
+    activities: plan.activities.map((activity) => ({
       ...activity,
       completed: false,
     })),
@@ -83,6 +84,13 @@ export function usePlans() {
     );
   }
 
+  function renameActivity(activityId, name) {
+    if (!activePlan) return;
+    setState((current) =>
+      renameActivityInState(current, current.activePlanId, activityId, name),
+    );
+  }
+
   return {
     plans,
     activePlan,
@@ -90,6 +98,7 @@ export function usePlans() {
     selectPlan,
     deletePlan,
     toggleActivity,
+    renameActivity,
     storageError,
   };
 }

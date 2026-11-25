@@ -493,6 +493,9 @@ h1 {
 }
 
 .activity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   border-top: 1px solid #edf0f5;
 }
 
@@ -500,25 +503,39 @@ h1 {
   border-top: 0;
 }
 
-.activity label {
+.activity-toggle {
   display: flex;
   align-items: center;
-  gap: 12px;
   min-height: 49px;
   cursor: pointer;
 }
 
-.activity input {
+.activity-toggle input {
   width: 17px;
   height: 17px;
   margin: 0;
   accent-color: #315fd4;
 }
 
-.activity-name {
+.activity-name-input {
   flex: 1;
+  min-width: 0;
+  min-height: 36px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 5px 7px;
+  background: transparent;
   color: #2f3e57;
   font-size: 14px;
+}
+
+.activity-name-input:hover {
+  border-color: #dce3ee;
+}
+
+.activity-name-input:focus {
+  border-color: #315fd4;
+  background: #fff;
 }
 
 .activity-meta {
@@ -527,9 +544,19 @@ h1 {
   white-space: nowrap;
 }
 
-.activity.is-complete .activity-name {
+.activity.is-complete .activity-name-input {
   color: #7a8698;
   text-decoration: line-through;
+}
+
+.visually-hidden {
+  position: absolute;
+  overflow: hidden;
+  width: 1px;
+  height: 1px;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
 }
 
 footer {

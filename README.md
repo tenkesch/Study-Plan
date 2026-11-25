@@ -1,6 +1,6 @@
 # Study Plan
 
-A small, stateless study-planning app. Create and switch between up to 20 week-by-week study plans, each based on a subject, exam date, and available study hours. Plans and their individual activity completion state are kept in the browser's local storage. Existing single-plan data is migrated to the new multi-plan format automatically.
+A frontend-only study planner built with Vite and React. Create and manage up to 20 study plans, track completion independently, and edit activity names. Plans are generated in the browser and saved locally on the device.
 
 ## Setup
 
@@ -8,28 +8,29 @@ Requires Node.js 20.19+ or 22.12+ and npm.
 
 ```sh
 npm install
-npm run install:all
-cp server/.env.example server/.env
 npm run dev
 ```
 
-The client runs at <http://localhost:5173> and proxies API requests to the server at <http://localhost:3001>. `server/.env` is optional for defaults; do not commit it.
+## Scripts
 
-## Commands
+- `npm run dev` — start the Vite development server
+- `npm run build` — create a production build in `dist`
+- `npm run preview` — serve the production build locally
+- `npm test` — run pure plan, validation, and local-storage logic tests
+- `npm run lint` — lint the application and configuration
+- `npm run format` — format project files with Prettier
 
-- `npm run dev` — run client and server together
-- `npm test` — run backend unit and API tests
-- `npm run lint` — lint both applications
-- `npm run format` — format both applications with Prettier
-- `npm --prefix client run build` — create a production client build
+## Plan logic
 
-## API
+The browser validates the subject, exam date, and weekly study hours before creating a plan. The exam date is compared using local calendar dates. The plan divides available hours into one- or two-hour sessions, distributes study phases through the weeks, reserves the final week for revision and a mock test, and keeps only final complete weeks if the 200-activity cap would be exceeded. A plan under seven days is scaled to the remaining days.
 
-- `GET /api/health` returns `{ "status": "ok" }`.
-- `POST /api/plan` accepts JSON `{ "subject": "Biology", "examDate": "YYYY-MM-DD", "hoursPerWeek": 6 }`.
+Plans and activity completion are stored in local storage. Existing single-plan data is migrated automatically to the multi-plan format without losing completion state.
 
-The response contains the normalized input, number of weeks, activities (`id`, `name`, `duration`, `week`, `phase`), and truncation metadata. Errors use `{ "error": { "message": "...", "details": ..., "requestId": "..." } }`. Every response includes `X-Request-Id`.
+## Deploy to Vercel
 
-## Environment
+1. Import this repository into Vercel.
+2. Select **Vite** as the framework preset.
+3. Set **Root Directory** to the repository root.
+4. Configure no environment variables, then deploy.
 
-See [server/.env.example](server/.env.example) for supported settings. CORS is restricted to `CLIENT_ORIGIN`. General and plan endpoint rate limits have configurable window and request limits.
+Vercel serves the static production build and applies the response security headers defined in `vercel.json`.

@@ -1,36 +1,7 @@
 import { useState } from "react";
+import { validatePlanInput } from "../lib/validation.js";
 
-function validate(values) {
-  const errors = {};
-  const subject = values.subject.trim();
-  const today = new Date();
-  const todayUtc = new Date(
-    Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()),
-  );
-  const exam = new Date(`${values.examDate}T00:00:00.000Z`);
-  const latest = new Date(todayUtc);
-  latest.setUTCFullYear(latest.getUTCFullYear() + 2);
-  if (!subject || subject.length > 100) {
-    errors.subject = "* Enter a subject name.";
-  }
-  if (
-    !/^\d{4}-\d{2}-\d{2}$/.test(values.examDate) ||
-    Number.isNaN(exam.getTime()) ||
-    exam.toISOString().slice(0, 10) !== values.examDate ||
-    exam <= todayUtc ||
-    exam > latest
-  ) {
-    errors.examDate =
-      "Choose a future exam date no more than two years from today.";
-  }
-  const hours = Number(values.hoursPerWeek);
-  if (!Number.isFinite(hours) || hours < 1 || hours > 60) {
-    errors.hoursPerWeek = "Enter between 1 and 60 hours per week.";
-  }
-  return errors;
-}
-
-export default function PlanForm({ onCreate, loading }) {
+export default function PlanForm({ onCreate }) {
   const [values, setValues] = useState({
     subject: "",
     examDate: "",
@@ -44,16 +15,20 @@ export default function PlanForm({ onCreate, loading }) {
     setErrors((current) => ({ ...current, [name]: undefined }));
   }
 
-  async function submit(event) {
+  function submit(event) {
     event.preventDefault();
-    const nextErrors = validate(values);
+    const nextErrors = validatePlanInput(values);
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length) return;
-    await onCreate({
+    const created = onCreate({
       subject: values.subject.trim(),
       examDate: values.examDate,
       hoursPerWeek: Number(values.hoursPerWeek),
     });
+    if (created) {
+      setValues({ subject: "", examDate: "", hoursPerWeek: "6" });
+      setErrors({});
+    }
   }
 
   function openDatePicker(event) {
@@ -126,8 +101,8 @@ export default function PlanForm({ onCreate, loading }) {
           </span>
         )}
       </div>
-      <button className="button primary" type="submit" disabled={loading}>
-        {loading ? "Creating plan…" : "Create plan"}
+      <button className="button primary" type="submit">
+        Create plan
       </button>
     </form>
   );

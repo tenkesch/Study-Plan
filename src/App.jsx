@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { createPlan } from "./api.js";
 import PlanForm from "./components/PlanForm.jsx";
 import PlanList from "./components/PlanList.jsx";
 import PlanSwitcher from "./components/PlanSwitcher.jsx";
+import { generatePlan } from "./lib/planGenerator.js";
 import { MAX_PLANS } from "./plans/planState.js";
 import { usePlans } from "./hooks/usePlans.js";
 
@@ -14,10 +14,9 @@ export default function App() {
     selectPlan,
     deletePlan,
     toggleActivity,
+    renameActivity,
     storageError,
   } = usePlans();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const previousPlanCount = useRef(plans.length);
 
@@ -28,25 +27,11 @@ export default function App() {
     previousPlanCount.current = plans.length;
   }, [plans.length]);
 
-  async function handleCreate(input) {
-    setLoading(true);
-    setError("");
-    try {
-      const plan = await createPlan(input);
-      if (!addPlan(plan)) {
-        setError("You can keep up to 20 study plans.");
-        return;
-      }
-      setFormOpen(false);
-      setError("");
-    } catch (requestError) {
-      const details = Array.isArray(requestError.details)
-        ? requestError.details.map((item) => item.message).join(" ")
-        : "";
-      setError([requestError.message, details].filter(Boolean).join(" "));
-    } finally {
-      setLoading(false);
-    }
+  function handleCreate(input) {
+    const added = addPlan(generatePlan(input));
+    if (!added) return false;
+    setFormOpen(false);
+    return true;
   }
 
   return (
@@ -87,7 +72,6 @@ export default function App() {
                 type="button"
                 disabled={plans.length >= MAX_PLANS}
                 onClick={() => {
-                  setError("");
                   setFormOpen(true);
                 }}
               >
@@ -111,22 +95,15 @@ export default function App() {
                   <button
                     className="button secondary"
                     type="button"
-                    disabled={loading}
                     onClick={() => {
                       setFormOpen(false);
-                      setError("");
                     }}
                   >
                     Cancel
                   </button>
                 )}
               </div>
-              <PlanForm onCreate={handleCreate} loading={loading} />
-              {error && (
-                <p className="error-banner" role="alert">
-                  {error}
-                </p>
-              )}
+              <PlanForm onCreate={handleCreate} />
             </section>
           )}
           {storageError && (
@@ -136,7 +113,11 @@ export default function App() {
             </p>
           )}
           {activePlan && (
-            <PlanList plan={activePlan} onToggle={toggleActivity} />
+            <PlanList
+              plan={activePlan}
+              onToggle={toggleActivity}
+              onRename={renameActivity}
+            />
           )}
           <footer>Small steps, steady progress.</footer>
         </div>

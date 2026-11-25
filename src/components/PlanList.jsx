@@ -1,7 +1,7 @@
 import ActivityItem from "./ActivityItem.jsx";
 import ProgressBar from "./ProgressBar.jsx";
 
-export default function PlanList({ plan, onToggle }) {
+export default function PlanList({ plan, onToggle, onRename }) {
   const completedCount = plan.activities.filter(
     (activity) => activity.completed,
   ).length;
@@ -39,6 +39,7 @@ export default function PlanList({ plan, onToggle }) {
                     activity={activity}
                     completed={activity.completed}
                     onToggle={onToggle}
+                    onRename={onRename}
                   />
                 ))}
             </ul>
