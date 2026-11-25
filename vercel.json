@@ -1,0 +1,10 @@
+{
+  "services": {
+    "web": { "root": "client/" },
+    "api": { "root": "server/", "framework": "express" }
+  },
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": { "service": "api" } },
+    { "source": "/(.*)", "destination": { "service": "web" } }
+  ]
+}
